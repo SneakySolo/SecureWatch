@@ -9,8 +9,10 @@ import com.SneakySolo.SecureWatch.Repository.UserRepository;
 import com.SneakySolo.SecureWatch.Util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,16 +40,30 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public AuthResponseDTO login(LoginRequestDTO dto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword()));
+    public AuthResponseDTO login(LoginRequestDTO dto, String ip) {
+        Authentication authentication = null;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword()));
+        } catch (AuthenticationException e) {
+            detectionService.saveLoginAttempt(dto.getUsername(), ip, false);
+            detectionService.checkBruteForce(dto.getUsername(), ip);
+            throw new AuthenticationServiceException(e.getMessage());
+        }
 
         if (!authentication.isAuthenticated()) {
             throw new RuntimeException("Invalid username and password");
         }
+        detectionService.saveLoginAttempt(dto.getUsername(), ip, true);
 
         User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.isBlocked()) {
+            throw new RuntimeException("User is blocked");
+        }
+
+        detectionService.checkNewIp(user.getUsername(), ip);
 
         String token = jwtUtil.generateToken(dto.getUsername(), user.getRole().name());
 

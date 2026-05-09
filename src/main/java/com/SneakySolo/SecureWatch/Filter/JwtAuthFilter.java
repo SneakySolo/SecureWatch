@@ -1,5 +1,11 @@
 package com.SneakySolo.SecureWatch.Filter;
 
+import com.SneakySolo.SecureWatch.Entity.BlockedEntity;
+import com.SneakySolo.SecureWatch.Entity.EntityType;
+import com.SneakySolo.SecureWatch.Entity.User;
+import com.SneakySolo.SecureWatch.Repository.BlockedEntityRepository;
+import com.SneakySolo.SecureWatch.Repository.UserRepository;
+import com.SneakySolo.SecureWatch.Service.DetectionService;
 import com.SneakySolo.SecureWatch.Util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +28,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final DetectionService detectionService;
+    private final BlockedEntityRepository blockedRepository;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -38,16 +47,23 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
         }
 
+        if (blockedRepository.existsByEntityTypeAndEntityValue(EntityType.IP, request.getRemoteAddr())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails user = userDetailsService.loadUserByUsername(username);
             if (jwtUtil.ValidateToken(token, user)) {
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                if (user.isEnabled() && !blockedRepository.existsByEntityTypeAndEntityValue(EntityType.IP, request.getRemoteAddr())) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
 
-                authToken.setDetails(new WebAuthenticationDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    authToken.setDetails(new WebAuthenticationDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
         }
         filterChain.doFilter(request, response);

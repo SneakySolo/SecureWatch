@@ -41,13 +41,14 @@ public class DetectionService {
             suspiciousEvent.setEventType(EventType.BRUTE_FORCE_ATTEMPT);
             suspiciousEvent.setDescription("Multiple failed login attempts");
             suspiciousEvent.setUser(user);
+            suspiciousEventRepository.save(suspiciousEvent);
         }
         addRisk(user, count*2);
     }
 
     public void checkNewIp(String username, String ipAddress) {
 
-        if (loginAttemptRepository
+        if (!loginAttemptRepository
                 .existsByUsernameAndIpAddressAndSuccess(username, ipAddress, true)) {
 
             User user = userRepository.findByUsername(username)
@@ -58,26 +59,45 @@ public class DetectionService {
             suspiciousEvent.setEventType(EventType.NEW_IP_LOGIN);
             suspiciousEvent.setDescription("New IP detected");
             suspiciousEvent.setUser(user);
+            suspiciousEventRepository.save(suspiciousEvent);
 
             addRisk(user, 3);
         }
     }
 
-    private void addRisk(User user, int points) {
-        User currentUser = user;
-        int currentPoints = user.getRiskScore();
-        currentUser.setRiskScore(currentPoints + points);
+    public void checkForRapidRequests(String username, String ipAddress) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Username not found"));
 
-        if (currentPoints >= 15) {
+        int count = loginAttemptRepository.countRecentByUsernameOrIp(username, ipAddress, LocalDateTime.now().minusMinutes(1));
+
+        if (count > 30) {
+            SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
+            suspiciousEvent.setIpAddress(ipAddress);
+            suspiciousEvent.setEventType(EventType.RAPID_REQUESTS);
+            suspiciousEvent.setDescription("Too many requests in a short span of time");
+            suspiciousEvent.setUser(user);
+            suspiciousEventRepository.save(suspiciousEvent);
+
+            addRisk(user, 8);
+        }
+    }
+
+    private void addRisk(User user, int points) {
+        int newPoints = user.getRiskScore() + points;
+        user.setRiskScore(newPoints);
+
+        if (newPoints >= 15) {
             user.setBlocked(true);
 
             BlockedEntity blockedEntity = new BlockedEntity();
             blockedEntity.setBlockedAt(LocalDateTime.now());
             blockedEntity.setEntityType(EntityType.USER);
-            blockedEntity.setEntityValue(currentUser.getUsername());
-            blockedEntity.setReason("Auto-blocked: Risk score exceeded threshold (" + currentPoints + ")");
+            blockedEntity.setEntityValue(user.getUsername());
+            blockedEntity.setReason("Auto-blocked: Risk score exceeded threshold (" + newPoints + ")");
             blockedEntity.setBlockedBy("SYSTEM");
+            blockedEntityRepository.save(blockedEntity);
         }
-        userRepository.save(currentUser);
+        userRepository.save(user);
     }
 }
