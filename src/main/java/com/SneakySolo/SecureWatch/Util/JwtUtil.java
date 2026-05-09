@@ -1,19 +1,16 @@
 package com.SneakySolo.SecureWatch.Util;
 
-import com.SneakySolo.SecureWatch.Entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.apache.el.parser.Token;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,10 +25,10 @@ public class JwtUtil {
     @Value("${jwt.duration}")
     private Long duration;
 
-    public String generateToken(String username){
+    public String generateToken(String username, String role){
         Map<String, Object> claims = new HashMap<>();
         claims.put("username", username);
-        claims.put("role", Role.USER);
+        claims.put("role", role);
 
         return Jwts.builder()
                 .claims(claims)
@@ -69,7 +66,7 @@ public class JwtUtil {
         Date expiration = extractClaim(token, Claims::getExpiration);
 
         if (username.equals(userDetails.getUsername())
-                || expiration.after(new Date())) {
+                && expiration.after(new Date())) {
                     return true;
         }
         return false;
