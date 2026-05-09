@@ -21,7 +21,10 @@ public class SuspiciousEvent {
     private User user;
 
     private String ipAddress;
-    private String eventType;
+
+    @Enumerated(EnumType.STRING)
+    private EventType eventType;
+
     private String description;
 
     @Column(columnDefinition = "TEXT")

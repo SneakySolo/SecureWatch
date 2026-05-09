@@ -22,6 +22,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final DetectionService detectionService;
 
     public void register(RegisterRequestDTO dto) {
 
