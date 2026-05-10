@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -42,8 +46,8 @@ public class DetectionService {
             suspiciousEvent.setDescription("Multiple failed login attempts");
             suspiciousEvent.setUser(user);
             suspiciousEventRepository.save(suspiciousEvent);
+            addRisk(user, count*2);
         }
-        addRisk(user, count*2);
     }
 
     public void checkNewIp(String username, String ipAddress) {
@@ -65,13 +69,26 @@ public class DetectionService {
         }
     }
 
+    private final Map<String, List<LocalDateTime>> requestTimestamps = new ConcurrentHashMap<>();
+
     public void checkForRapidRequests(String username, String ipAddress) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Username not found"));
+        String requestFrom = username + " : " + ipAddress;
+        requestTimestamps.computeIfAbsent(requestFrom, k -> new ArrayList<>());
 
-        int count = loginAttemptRepository.countRecentByUsernameOrIp(username, ipAddress, LocalDateTime.now().minusMinutes(1));
+        List<LocalDateTime> timestamps = requestTimestamps.get(requestFrom);
+        LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1);
 
-        if (count > 30) {
+        timestamps.removeIf(t -> t.isBefore(oneMinuteAgo));
+        if (timestamps.isEmpty()) { // remove entry entirely if user is no more active
+            requestTimestamps.remove(requestFrom);
+            return;
+        }
+        timestamps.add(LocalDateTime.now());
+
+        if (timestamps.size() == 30) {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("Username not found"));
+
             SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
             suspiciousEvent.setIpAddress(ipAddress);
             suspiciousEvent.setEventType(EventType.RAPID_REQUESTS);
@@ -87,7 +104,7 @@ public class DetectionService {
         int newPoints = user.getRiskScore() + points;
         user.setRiskScore(newPoints);
 
-        if (newPoints >= 15) {
+        if (newPoints >= 15 && !user.isBlocked()) {
             user.setBlocked(true);
 
             BlockedEntity blockedEntity = new BlockedEntity();

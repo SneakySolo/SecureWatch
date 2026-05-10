@@ -31,6 +31,9 @@ public class UserService {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
+        if (userRepository.existsByUsername(dto.getUsername())) {
+            throw new RuntimeException("Username already exists");
+        }
 
         User user = new User();
         user.setEmail(dto.getEmail());
@@ -54,7 +57,6 @@ public class UserService {
         if (!authentication.isAuthenticated()) {
             throw new RuntimeException("Invalid username and password");
         }
-        detectionService.saveLoginAttempt(dto.getUsername(), ip, true);
 
         User user = userRepository.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -62,8 +64,8 @@ public class UserService {
         if (user.isBlocked()) {
             throw new RuntimeException("User is blocked");
         }
-
         detectionService.checkNewIp(user.getUsername(), ip);
+        detectionService.saveLoginAttempt(dto.getUsername(), ip, true);
 
         String token = jwtUtil.generateToken(dto.getUsername(), user.getRole().name());
 

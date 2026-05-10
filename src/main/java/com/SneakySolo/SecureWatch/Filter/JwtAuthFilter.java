@@ -1,6 +1,5 @@
 package com.SneakySolo.SecureWatch.Filter;
 
-import com.SneakySolo.SecureWatch.Entity.BlockedEntity;
 import com.SneakySolo.SecureWatch.Entity.EntityType;
 import com.SneakySolo.SecureWatch.Entity.User;
 import com.SneakySolo.SecureWatch.Repository.BlockedEntityRepository;
@@ -48,7 +47,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         if (blockedRepository.existsByEntityTypeAndEntityValue(EntityType.IP, request.getRemoteAddr())) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Access denied: IP is blocked");
             return;
         }
 
@@ -57,13 +57,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             UserDetails user = userDetailsService.loadUserByUsername(username);
             if (jwtUtil.ValidateToken(token, user)) {
 
-                if (user.isEnabled() && !blockedRepository.existsByEntityTypeAndEntityValue(EntityType.IP, request.getRemoteAddr())) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                User dbUser = userRepository.findByUsername(username)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
-                    authToken.setDetails(new WebAuthenticationDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (dbUser.isBlocked()) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().write("Access denied: Account is blocked");
+                    return;
                 }
+
+                detectionService.checkForRapidRequests(username, request.getRemoteAddr());
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
         filterChain.doFilter(request, response);
