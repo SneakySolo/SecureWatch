@@ -1,10 +1,7 @@
 package com.SneakySolo.SecureWatch.Service;
 
 import com.SneakySolo.SecureWatch.Entity.*;
-import com.SneakySolo.SecureWatch.Repository.BlockedEntityRepository;
-import com.SneakySolo.SecureWatch.Repository.LoginAttemptRepository;
-import com.SneakySolo.SecureWatch.Repository.SuspiciousEventRepository;
-import com.SneakySolo.SecureWatch.Repository.UserRepository;
+import com.SneakySolo.SecureWatch.Repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +19,7 @@ public class DetectionService {
     private final LoginAttemptRepository loginAttemptRepository;
     private final SuspiciousEventRepository suspiciousEventRepository;
     private final BlockedEntityRepository blockedEntityRepository;
+    private final DecoyAccessLogRepository decoyAccessLogRepository;
 
     public void saveLoginAttempt(String username, String ipAddress, boolean success) {
         LoginAttempt loginAttempt = new LoginAttempt();
@@ -29,6 +27,23 @@ public class DetectionService {
         loginAttempt.setIpAddress(ipAddress);
         loginAttempt.setSuccess(success);
         loginAttemptRepository.save(loginAttempt);
+    }
+
+    public void registerDecoyAccess(String username, String ipAddress, String endpoint) {
+
+        User user = null;
+        if (!username.equals("Anonymous")) {
+            user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("Username not found"));
+        }
+
+        DecoyAccessLog decoyAccessLog = new DecoyAccessLog();
+        decoyAccessLog.setEndpoint(endpoint);
+        decoyAccessLog.setIpAddress(ipAddress);
+        decoyAccessLog.setUser(user);
+        decoyAccessLogRepository.save(decoyAccessLog);
+
+        honeyPotTriggered(user, ipAddress);
     }
 
     public void checkBruteForce(String username, String ipAddress) {
@@ -73,17 +88,18 @@ public class DetectionService {
 
     public void checkForRapidRequests(String username, String ipAddress) {
         String requestFrom = username + " : " + ipAddress;
-        requestTimestamps.computeIfAbsent(requestFrom, k -> new ArrayList<>());
 
         List<LocalDateTime> timestamps = requestTimestamps.get(requestFrom);
         LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1);
 
         timestamps.removeIf(t -> t.isBefore(oneMinuteAgo));
+
         if (timestamps.isEmpty()) { // remove entry entirely if user is no more active
             requestTimestamps.remove(requestFrom);
-            return;
         }
-        timestamps.add(LocalDateTime.now());
+
+        List<LocalDateTime> active = requestTimestamps.computeIfAbsent(requestFrom, k -> new ArrayList<>());
+        active.add(LocalDateTime.now());
 
         if (timestamps.size() == 30) {
             User user = userRepository.findByUsername(username)
@@ -98,6 +114,18 @@ public class DetectionService {
 
             addRisk(user, 8);
         }
+    }
+
+    public void honeyPotTriggered(User user, String ipAddress) {
+
+        SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
+        suspiciousEvent.setIpAddress(ipAddress);
+        suspiciousEvent.setEventType(EventType.HONEYPOT_TRIGGERED);
+        suspiciousEvent.setDescription("Honeypot triggered");
+        suspiciousEvent.setUser(user);
+        suspiciousEventRepository.save(suspiciousEvent);
+
+        addRisk(user, 15);
     }
 
     private void addRisk(User user, int points) {
