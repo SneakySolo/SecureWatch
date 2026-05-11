@@ -5,6 +5,7 @@ import com.SneakySolo.SecureWatch.Dto.LoginRequestDTO;
 import com.SneakySolo.SecureWatch.Dto.RegisterRequestDTO;
 import com.SneakySolo.SecureWatch.Entity.Role;
 import com.SneakySolo.SecureWatch.Entity.User;
+import com.SneakySolo.SecureWatch.Exception.AccountBlockedException;
 import com.SneakySolo.SecureWatch.Repository.UserRepository;
 import com.SneakySolo.SecureWatch.Util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +63,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.isBlocked()) {
-            throw new RuntimeException("User is blocked");
+            throw new AccountBlockedException("Your account has been blocked due to suspicious activity. Contact an administrator to unblock.");
         }
         detectionService.checkNewIp(user.getUsername(), ip);
         detectionService.saveLoginAttempt(dto.getUsername(), ip, true);

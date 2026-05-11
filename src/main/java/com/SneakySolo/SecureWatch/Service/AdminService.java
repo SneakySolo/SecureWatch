@@ -70,8 +70,14 @@ public class AdminService {
             dto.setId(Long.valueOf(accessLog.getId()));
             dto.setIpAddress(accessLog.getIpAddress());
             dto.setTimestamp(accessLog.getTimestamp());
-            dto.setUsername(accessLog.getUser().getUsername());
             dto.setEndpoint(accessLog.getEndpoint());
+
+            if (accessLog.getUser().getUsername() != null) {
+                dto.setUsername(accessLog.getUser().getUsername());
+            }
+            else {
+                dto.setUsername("Anonymous");
+            }
 
             dtos.add(dto);
         }
@@ -79,6 +85,11 @@ public class AdminService {
     }
 
     public void blockEntity(BlockRequestDTO dto, String adminUsername) {
+        EntityType type = EntityType.valueOf(dto.getEntityType());
+        if (blockedEntityRepository.existsByEntityTypeAndEntityValue(type, dto.getEntityValue())) {
+            throw new RuntimeException(dto.getEntityValue() + " is already blocked");
+        }
+
         BlockedEntity blockedEntity = new BlockedEntity();
 
         if (dto.getEntityType().equals("USER")) {
@@ -97,7 +108,8 @@ public class AdminService {
     }
 
     public void unblockEntity(Integer id) {
-        BlockedEntity entity = blockedEntityRepository.findById(id);
+        BlockedEntity entity = blockedEntityRepository.findById(Long.valueOf(id))
+                .orElseThrow(() -> new RuntimeException("Blocked entity not found"));
 
         if (entity.getEntityType().toString().equals("USER")) {
             String username = entity.getEntityValue();
@@ -106,9 +118,8 @@ public class AdminService {
 
             user.setBlocked(false);
             userRepository.save(user);
-
-            blockedEntityRepository.delete(entity);
         }
+        blockedEntityRepository.delete(entity);
     }
 
     public AdminSummaryDTO getSummary() {

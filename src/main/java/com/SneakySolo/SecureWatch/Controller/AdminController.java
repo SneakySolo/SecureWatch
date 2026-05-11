@@ -3,6 +3,7 @@ package com.SneakySolo.SecureWatch.Controller;
 import com.SneakySolo.SecureWatch.Dto.*;
 import com.SneakySolo.SecureWatch.Service.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,14 +41,16 @@ public class AdminController {
     }
 
     @PostMapping("/api/admin/block")
-    public void block(@RequestBody BlockRequestDTO dto,
+    public ResponseEntity<Void> block(@RequestBody BlockRequestDTO dto,
                       Principal principal){
 
         adminService.blockEntity(dto, principal.getName());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping("/api/admin/unblock/{id}")
-    public void unblock(@PathVariable Integer id){
+    public ResponseEntity<Void> unblock(@PathVariable Integer id){
         adminService.unblockEntity(id);
+        return ResponseEntity.noContent().build();
     }
 }

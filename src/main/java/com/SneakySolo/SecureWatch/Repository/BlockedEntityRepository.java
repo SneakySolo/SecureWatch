@@ -10,5 +10,4 @@ public interface BlockedEntityRepository extends JpaRepository<BlockedEntity,Lon
     boolean existsByEntityTypeAndEntityValue(EntityType entityType, String entityValue);
     List<BlockedEntity> findAllByOrderByBlockedAtDesc();
     void deleteByEntityTypeAndEntityValue(EntityType entityType, String entityValue);
-    BlockedEntity findById(Integer id);
 }
