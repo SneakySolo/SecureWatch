@@ -1,4 +1,3 @@
-/* ── Reset & Variables ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
@@ -48,7 +47,7 @@ body {
     line-height: 1.6;
 }
 
-/* ── Login Page ─────────────────────────────────────────────────────────── */
+/* login page part */
 .login-body {
     display: flex;
     align-items: center;
@@ -102,7 +101,9 @@ body {
     margin-bottom: 4px;
     color: var(--text);
 }
-.login-header p { color: var(--text-muted); font-size: 13px; }
+.login-header p {
+    color: var(--text-muted); font-size: 13px;
+}
 
 .alert-error {
     display: flex;
@@ -171,7 +172,7 @@ body {
     text-align: center;
 }
 
-/* ── Navbar ─────────────────────────────────────────────────────────────── */
+/* navbar part */
 .navbar {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -271,7 +272,7 @@ body {
 }
 .btn-logout:hover { background: rgba(239,68,68,0.25); }
 
-/* ── Page Body ──────────────────────────────────────────────────────────── */
+/* page body part */
 .page-body {
     min-height: 100vh;
     padding-top: var(--navbar-h);
@@ -284,7 +285,7 @@ body {
     padding: 32px 24px;
 }
 
-/* ── Page Header ────────────────────────────────────────────────────────── */
+/* page header part */
 .page-header {
     display: flex;
     align-items: flex-end;
@@ -326,7 +327,7 @@ body {
 }
 .back-link:hover { color: var(--blue); }
 
-/* ── User Profile Strip ─────────────────────────────────────────────────── */
+/* user profile part */
 .user-strip {
     display: flex;
     align-items: center;
@@ -358,7 +359,7 @@ body {
 }
 .user-strip-sub { font-size: 12px; color: var(--text-muted); }
 
-/* ── Table ──────────────────────────────────────────────────────────────── */
+/* table */
 .table-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -423,7 +424,7 @@ body {
     font-size: 13px;
 }
 
-/* ── Risk Score ─────────────────────────────────────────────────────────── */
+/* risk score */
 .risk-wrap { display: flex; align-items: center; gap: 9px; }
 
 .risk-num {
@@ -447,7 +448,7 @@ body {
 .risk-fill.mid  { background: var(--warning); }
 .risk-fill.high { background: var(--danger);  }
 
-/* ── Badges ─────────────────────────────────────────────────────────────── */
+/* badge */
 .badge {
     display: inline-block;
     font-size: 11px;
@@ -463,7 +464,7 @@ body {
 .badge--purple  { background: var(--purple-dim);  color: #6d28d9; border: 1px solid rgba(139,92,246,0.2);  }
 .badge--success { background: var(--success-dim); color: #15803d; border: 1px solid rgba(34,197,94,0.2);   }
 
-/* ── Action Buttons ─────────────────────────────────────────────────────── */
+/* action buttons */
 .btn-block {
     padding: 5px 13px;
     background: var(--danger-dim);
