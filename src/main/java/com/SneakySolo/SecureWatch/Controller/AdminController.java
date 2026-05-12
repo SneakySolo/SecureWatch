@@ -2,6 +2,7 @@ package com.SneakySolo.SecureWatch.Controller;
 
 import com.SneakySolo.SecureWatch.Dto.*;
 import com.SneakySolo.SecureWatch.Service.AdminService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class AdminController {
     }
 
     @PostMapping("/api/admin/block")
-    public ResponseEntity<Void> block(@RequestBody BlockRequestDTO dto,
+    public ResponseEntity<Void> block(@Valid @RequestBody BlockRequestDTO dto,
                       Principal principal){
 
         adminService.blockEntity(dto, principal.getName());

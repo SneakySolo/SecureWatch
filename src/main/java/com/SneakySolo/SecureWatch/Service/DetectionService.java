@@ -3,7 +3,9 @@ package com.SneakySolo.SecureWatch.Service;
 import com.SneakySolo.SecureWatch.Entity.*;
 import com.SneakySolo.SecureWatch.Repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -32,9 +34,8 @@ public class DetectionService {
     public void registerDecoyAccess(String username, String ipAddress, String endpoint) {
 
         User user = null;
-        if (!username.equals("Anonymous")) {
-            user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("Username not found"));
+        if (!username.equals("anonymous")) {
+            user = userRepository.findByUsername(username).orElse(null);
         }
 
         DecoyAccessLog decoyAccessLog = new DecoyAccessLog();
@@ -52,7 +53,7 @@ public class DetectionService {
                 .countByUsernameAndSuccessAndTimestampAfter(username, false, LocalDateTime.now().minusMinutes(5));
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Username not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
         if (count >= 5) {
             SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
@@ -71,7 +72,7 @@ public class DetectionService {
                 .existsByUsernameAndIpAddressAndSuccess(username, ipAddress, true)) {
 
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("Username not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
             SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
             suspiciousEvent.setIpAddress(ipAddress);
@@ -84,14 +85,13 @@ public class DetectionService {
         }
     }
 
-    private final Map<String, List<LocalDateTime>> requestTimestamps = new ConcurrentHashMap<>();
+    public final Map<String, List<LocalDateTime>> requestTimestamps = new ConcurrentHashMap<>();
 
     public void checkForRapidRequests(String username, String ipAddress) {
         String requestFrom = username + " : " + ipAddress;
 
-        List<LocalDateTime> timestamps = requestTimestamps.get(requestFrom);
         LocalDateTime oneMinuteAgo = LocalDateTime.now().minusMinutes(1);
-
+        List<LocalDateTime> timestamps = requestTimestamps.computeIfAbsent(requestFrom, k -> new ArrayList<>());
         timestamps.removeIf(t -> t.isBefore(oneMinuteAgo));
 
         if (timestamps.isEmpty()) { // remove entry entirely if user is no more active
@@ -103,7 +103,7 @@ public class DetectionService {
 
         if (timestamps.size() == 30) {
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("Username not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("Username not found"));
 
             SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
             suspiciousEvent.setIpAddress(ipAddress);
@@ -118,6 +118,10 @@ public class DetectionService {
 
     public void honeyPotTriggered(User user, String ipAddress) {
 
+        if (user == null) {
+            return;
+        }
+
         SuspiciousEvent suspiciousEvent = new SuspiciousEvent();
         suspiciousEvent.setIpAddress(ipAddress);
         suspiciousEvent.setEventType(EventType.HONEYPOT_TRIGGERED);
@@ -128,7 +132,8 @@ public class DetectionService {
         addRisk(user, 15);
     }
 
-    private void addRisk(User user, int points) {
+    @Transactional
+    public void addRisk(User user, int points) {
         int newPoints = user.getRiskScore() + points;
         user.setRiskScore(newPoints);
 

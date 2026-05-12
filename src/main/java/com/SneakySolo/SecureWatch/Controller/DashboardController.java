@@ -7,6 +7,7 @@ import com.SneakySolo.SecureWatch.Service.AdminService;
 import com.SneakySolo.SecureWatch.Service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,8 +26,8 @@ public class DashboardController {
     }
 
     @PostMapping("/dashboard/login")
-    public String loginSubmit(@RequestParam String username,
-                              @RequestParam String password,
+    public String loginSubmit(@Valid @RequestParam String username,
+                              @Valid @RequestParam String password,
                               HttpServletRequest request,
                               HttpSession session,
                               Model model) {

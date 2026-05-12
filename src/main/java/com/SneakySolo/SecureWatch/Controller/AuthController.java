@@ -5,6 +5,7 @@ import com.SneakySolo.SecureWatch.Dto.LoginRequestDTO;
 import com.SneakySolo.SecureWatch.Dto.RegisterRequestDTO;
 import com.SneakySolo.SecureWatch.Service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,7 @@ public class AuthController {
     }
 
     @PostMapping("/api/auth/login")
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO dto,
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto,
                                                  HttpServletRequest request) {
         String ip = request.getRemoteAddr();
         AuthResponseDTO authResponse = userService.login(dto, ip);

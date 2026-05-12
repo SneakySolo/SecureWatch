@@ -2,9 +2,12 @@ package com.SneakySolo.SecureWatch.Service;
 
 import com.SneakySolo.SecureWatch.Dto.*;
 import com.SneakySolo.SecureWatch.Entity.*;
+import com.SneakySolo.SecureWatch.Exception.EntityAlreadyBlockedException;
 import com.SneakySolo.SecureWatch.Repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -86,14 +89,14 @@ public class AdminService {
     public void blockEntity(BlockRequestDTO dto, String adminUsername) {
         EntityType type = EntityType.valueOf(dto.getEntityType());
         if (blockedEntityRepository.existsByEntityTypeAndEntityValue(type, dto.getEntityValue())) {
-            throw new RuntimeException(dto.getEntityValue() + " is already blocked");
+            throw new EntityAlreadyBlockedException(dto.getEntityValue() + " is already blocked");
         }
 
         BlockedEntity blockedEntity = new BlockedEntity();
 
         if (dto.getEntityType().equals("USER")) {
             User user = userRepository.findByUsername(dto.getEntityValue())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             user.setBlocked(true);
             userRepository.save(user);
@@ -106,14 +109,15 @@ public class AdminService {
         blockedEntityRepository.save(blockedEntity);
     }
 
+    @Transactional
     public void unblockEntity(Integer id) {
         BlockedEntity entity = blockedEntityRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new RuntimeException("Blocked entity not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("Blocked entity not found"));
 
         if (entity.getEntityType().toString().equals("USER")) {
             String username = entity.getEntityValue();
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
             user.setBlocked(false);
             user.setRiskScore(0);
@@ -165,7 +169,7 @@ public class AdminService {
 
     public List<SuspiciousEventDTO> getUserSuspiciousEvents(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         List<SuspiciousEvent> events = suspiciousEventRepository.findByUserOrderByTimestampDesc(user);
         List<SuspiciousEventDTO> dtos = new ArrayList<>();

@@ -40,7 +40,12 @@ public class DecoyController {
     @PostMapping("/api/decoy/export-users")
     public ResponseEntity<Object> decoyExportUsers(Principal principal, HttpServletRequest request) {
 
-        detectionService.registerDecoyAccess(principal.getName(), request.getRemoteAddr(), "/api/decoy/export-users");
+        String username = "Anonymous";
+        if (principal != null) {
+            username = principal.getName();
+        }
+
+        detectionService.registerDecoyAccess(username, request.getRemoteAddr(), "/api/decoy/export-users");
         Map<String, String> data = new HashMap<>();
         data.put("Username : ", null);
         data.put("Password : ", null);
@@ -51,7 +56,12 @@ public class DecoyController {
     @GetMapping("/api/decoy/system-config")
     public ResponseEntity<Object> getDecoySystemConfig(Principal principal, HttpServletRequest request) {
 
-        detectionService.registerDecoyAccess(principal.getName(), request.getRemoteAddr(), "api/decoy/system-config");
+        String username = "Anonymous";
+        if (principal != null) {
+            username = principal.getName();
+        }
+
+        detectionService.registerDecoyAccess(username, request.getRemoteAddr(), "api/decoy/system-config");
         Map<String, String> data = new HashMap<>();
         data.put("System : ", null);
         data.put("Access : ", null);
