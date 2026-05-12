@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SecureWatch — Blocked Entities</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet"  th:href="@{/style.css}">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+    <a th:href="@{/dashboard/users}" class="navbar-brand">
+        <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                <path d="M16 2L4 8v8c0 7.18 5.16 13.9 12 15.56C22.84 29.9 28 23.18 28 16V8L16 2z"
+                      stroke="#00d4ff" stroke-width="1.5" fill="none"/>
+                <path d="M12 16l3 3 6-6" stroke="#00d4ff" stroke-width="1.5"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        SecureWatch
+    </a>
+
+    <div class="navbar-links">
+        <a th:href="@{/dashboard/users}" class="nav-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            Users
+        </a>
+        <a th:href="@{/dashboard/blocked}" class="nav-link active">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+            Blocked
+        </a>
+    </div>
+
+    <div class="navbar-right">
+        <div class="admin-chip">
+            <span class="status-dot"></span>
+            <span th:text="${adminUser}">admin</span>
+        </div>
+        <a th:href="@{/dashboard/logout}" class="btn-logout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Logout
+        </a>
+    </div>
+</nav>
+
+<!-- ── Page Body ───────────────────────────────────────────────────────── -->
+<div class="page-body">
+    <div class="page-inner">
+
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Blocked Entities</h1>
+                <p class="page-subtitle">Users and IPs currently under restriction</p>
+            </div>
+            <span class="count-badge" th:text="${#lists.size(blockedList)} + ' blocked'">0 blocked</span>
+        </div>
+
+        <div class="table-card">
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Reason</th>
+                        <th>Blocked By</th>
+                        <th>Blocked At</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(blockedList)}">
+                        <td colspan="7" class="empty-row">No blocked entities — system is clean</td>
+                    </tr>
+                    <tr th:each="entity : ${blockedList}">
+                        <td class="mono" th:text="${entity.id}"></td>
+                        <td>
+                                <span class="badge"
+                                      th:classappend="${entity.entityType == 'USER'} ? ' badge--cyan' : ' badge--warning'"
+                                      th:text="${entity.entityType}">
+                                </span>
+                        </td>
+                        <td class="mono" th:text="${entity.entityValue}"></td>
+                        <td th:text="${entity.reason}"></td>
+                        <td th:text="${entity.blockedBy}"></td>
+                        <td class="timestamp"
+                            th:text="${#temporals.format(entity.blockedAt, 'yyyy-MM-dd HH:mm:ss')}">
+                        </td>
+                        <td>
+                            <form th:action="@{/dashboard/unblock/{id}(id=${entity.id})}"
+                                  method="post">
+                                <button type="submit" class="btn-unblock">Unblock</button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

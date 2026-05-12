@@ -19,8 +19,6 @@ public class DashboardController {
     private final UserService userService;
     private final AdminService adminService;
 
-    // ── Login ────────────────────────────────────────────────────────────────
-
     @GetMapping("/dashboard/login")
     public String loginPage() {
         return "login";
@@ -53,8 +51,6 @@ public class DashboardController {
         }
     }
 
-    // ── Users (Main Page) ────────────────────────────────────────────────────
-
     @GetMapping("/dashboard/users")
     public String users(HttpSession session, Model model) {
         if (session.getAttribute("adminUser") == null) return "redirect:/dashboard/login";
@@ -62,8 +58,6 @@ public class DashboardController {
         model.addAttribute("adminUser", session.getAttribute("adminUser"));
         return "users";
     }
-
-    // ── User Suspicious Events ───────────────────────────────────────────────
 
     @GetMapping("/dashboard/users/{username}/events")
     public String userEvents(@PathVariable String username,
@@ -75,8 +69,6 @@ public class DashboardController {
         model.addAttribute("adminUser", session.getAttribute("adminUser"));
         return "user-events";
     }
-
-    // ── Block User ───────────────────────────────────────────────────────────
 
     @PostMapping("/dashboard/users/{username}/block")
     public String blockUser(@PathVariable String username, HttpSession session) {
@@ -92,8 +84,6 @@ public class DashboardController {
         return "redirect:/dashboard/users";
     }
 
-    // ── Blocked Entities ─────────────────────────────────────────────────────
-
     @GetMapping("/dashboard/blocked")
     public String blocked(HttpSession session, Model model) {
         if (session.getAttribute("adminUser") == null) return "redirect:/dashboard/login";
@@ -102,16 +92,12 @@ public class DashboardController {
         return "blocked";
     }
 
-    // ── Unblock ──────────────────────────────────────────────────────────────
-
     @PostMapping("/dashboard/unblock/{id}")
     public String unblock(@PathVariable Integer id, HttpSession session) {
         if (session.getAttribute("adminUser") == null) return "redirect:/dashboard/login";
         adminService.unblockEntity(id);
         return "redirect:/dashboard/blocked";
     }
-
-    // ── Logout ───────────────────────────────────────────────────────────────
 
     @GetMapping("/dashboard/logout")
     public String logout(HttpSession session) {

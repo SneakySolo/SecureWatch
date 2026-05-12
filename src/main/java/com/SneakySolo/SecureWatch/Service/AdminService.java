@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -117,6 +116,7 @@ public class AdminService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             user.setBlocked(false);
+            user.setRiskScore(0);
             userRepository.save(user);
         }
         blockedEntityRepository.delete(entity);
@@ -143,6 +143,10 @@ public class AdminService {
         List<UserSummaryDTO> dtos = new ArrayList<>();
 
         for (User user : users) {
+            if (user.getRole().toString().equals("ADMIN")) {
+                continue;
+            }
+
             UserSummaryDTO dto = new UserSummaryDTO();
             dto.setId(user.getId());
             dto.setUsername(user.getUsername());
