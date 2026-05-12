@@ -137,4 +137,45 @@ public class AdminService {
         dto.setTopRiskyUsers(userList);
         return dto;
     }
+
+    public List<UserSummaryDTO> getAllActiveUsers() {
+        List<User> users = userRepository.findByIsBlockedFalseOrderByRiskScoreDesc();
+        List<UserSummaryDTO> dtos = new ArrayList<>();
+
+        for (User user : users) {
+            UserSummaryDTO dto = new UserSummaryDTO();
+            dto.setId(user.getId());
+            dto.setUsername(user.getUsername());
+            dto.setEmail(user.getEmail());
+            dto.setRiskScore(user.getRiskScore());
+            dto.setCreatedAt(user.getCreatedAt());
+            dto.setTotalSuspiciousEvents(suspiciousEventRepository.countByUser(user));
+
+            suspiciousEventRepository.findTopByUserOrderByTimestampDesc(user)
+                    .ifPresent(event -> dto.setLastActivity(event.getTimestamp()));
+
+            dtos.add(dto);
+        }
+        return dtos;
+    }
+
+    public List<SuspiciousEventDTO> getUserSuspiciousEvents(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<SuspiciousEvent> events = suspiciousEventRepository.findByUserOrderByTimestampDesc(user);
+        List<SuspiciousEventDTO> dtos = new ArrayList<>();
+
+        for (SuspiciousEvent ev : events) {
+            SuspiciousEventDTO dto = new SuspiciousEventDTO();
+            dto.setId(Long.valueOf(ev.getId()));
+            dto.setUsername(user.getUsername());
+            dto.setIpAddress(ev.getIpAddress());
+            dto.setEventType(String.valueOf(ev.getEventType()));
+            dto.setDescription(ev.getDescription());
+            dto.setTimestamp(ev.getTimestamp());
+            dtos.add(dto);
+        }
+        return dtos;
+    }
 }
