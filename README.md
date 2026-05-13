@@ -201,7 +201,7 @@ hit a decoy endpoint       → risk: 28  (+15) → AUTO BLOCKED ✓
 
 ## Screenshots
 
-> *Add screenshots of the dashboard here*
+![image alt](https://github.com/SneakySolo/SecureWatch/blob/f22aa04e4e91f20c72a3688933d73465807ba687/Capture.PNG)
 
 ---
 
