@@ -31,7 +31,7 @@ Every login attempt is recorded. Every API request passes through a detection la
 **Risk Scoring**
 | Event | Points |
 |---|---|
-| Failed login (×n) | +2 per attempt |
+| Failed login (×4) | +2 per attempt |
 | New IP detected | +3 |
 | Rapid requests | +8 |
 | Honeypot triggered | +15 |
