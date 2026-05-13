@@ -205,10 +205,7 @@ hit a decoy endpoint       → risk: 28  (+15) → AUTO BLOCKED ✓
 
 ---
 
-## License
+## Author
 
-MIT — do whatever you want with it.
-
----
-
-*Built as a portfolio project to demonstrate Spring Security internals, JWT lifecycle management, behavioral analysis, and defensive backend design.*
+**Kumar Aditya**
+[LinkedIn](https://www.linkedin.com/in/kumar-aditya-567403278/)
