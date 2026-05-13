@@ -14,6 +14,12 @@ Every login attempt is recorded. Every API request passes through a detection la
 
 ---
 
+## Screenshot
+
+![image alt](https://github.com/SneakySolo/SecureWatch/blob/f22aa04e4e91f20c72a3688933d73465807ba687/Capture.PNG)
+
+---
+
 ## Features
 
 **Detection Engine**
@@ -196,12 +202,6 @@ failed login x5            → risk: 10  (+2 per attempt, triggered at 5)
 login from new IP          → risk: 13  (+3)
 hit a decoy endpoint       → risk: 28  (+15) → AUTO BLOCKED ✓
 ```
-
----
-
-## Screenshots
-
-![image alt](https://github.com/SneakySolo/SecureWatch/blob/f22aa04e4e91f20c72a3688933d73465807ba687/Capture.PNG)
 
 ---
 
