@@ -205,7 +205,7 @@ hit a decoy endpoint       → risk: 28  (+15) → AUTO BLOCKED ✓
 
 ---
 
-## Author
+## Developer
 
 **Kumar Aditya**
 [LinkedIn](https://www.linkedin.com/in/kumar-aditya-567403278/)
