@@ -5,7 +5,7 @@
 SecureWatch is a REST API with an admin dashboard that doesn't just handle login and registration. It **watches what users do**, scores their behavior, and automatically blocks threats. Honeypot endpoints, brute force detection, new IP alerts, and rapid request tracking — all running silently on every request.
  
 ----
-
+ 
 ## What it actually does
 
 Most auth projects stop at "user logs in, gets a token." SecureWatch keeps going.
