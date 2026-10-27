@@ -6,7 +6,7 @@ SecureWatch is a REST API with an admin dashboard that doesn't just handle login
 
 ---
 
-## What it actually does
+## What it actually does 
 
 Most auth projects stop at "user logs in, gets a token." SecureWatch keeps going.
 
