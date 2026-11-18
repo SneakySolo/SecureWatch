@@ -1,4 +1,4 @@
-# 🛡️ SecureWatch
+# 🛡️ SecureWatch 
 
 > A backend-heavy security monitoring system built with Spring Boot — goes far beyond basic auth.
 
